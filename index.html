@@ -2,25 +2,24 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="https://cdn.rawgit.com/moonspam/NanumSquare/master/nanumsquare.css">    
     <style>
         :root {
-            --bg-color: #f1f1ef; /* 노션 기본 배경색과 유사 */
-            --bar-color: #2383e2; /* 진행바 색상 (파란색) */
+            --bg-color: #f1f1ef;
+            --bar-color: #2383e2;
+            --vacation-color: #f2994a;
             --text-color: #37352f;
         }
         body {
             margin: 0;
             padding: 10px;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+            font-family: 'NanumSquare', sans-serif;
             background-color: transparent;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        .container {
-            width: 100%;
-            max-width: 800px;
-        }
+        .container { width: 100%; max-width: 800px; }
         .text-wrapper {
             display: flex;
             justify-content: space-between;
@@ -42,19 +41,15 @@
             width: 0%;
             transition: width 1s ease-in-out;
         }
-        #d-day-text {
-            color: #eb5757; /* D-Day 강조색 (빨간색 계열) */
-        }
-
-        #d-day-text2 {
-            color: #eb5757; /* D-Day 강조색 (빨간색 계열) */
-        }    </style>
+        .vacation-bar { background-color: var(--vacation-color); }
+        #d-day-text, #d-day-text2 { color: #eb5757; font-weight: bold; }
+    </style>
 </head>
 <body>
 
 <div class="container">
     <div class="text-wrapper">
-        <span>1학기 종료까지 <span id="d-day-text">D-?</span> 벌써 <span id="d-day-text2"></span>일째</span>
+        <span id="status-label">로딩 중... <span id="d-day-text">D-?</span> <span id="elapsed-label">벌써</span> <span id="d-day-text2">?</span>일째</span>
         <span id="percent-text">0%</span>
     </div>
     <div class="progress-container">
@@ -65,36 +60,60 @@
 <script>
     function updateProgress() {
         const now = new Date();
-        const targetDate = new Date('2026-08-29T00:00:00');
-        // 학기 시작일을 2026년 3월 2일로 가정하여 진행률 계산
-        const startDate = new Date('2026-03-02T00:00:00');
-
-        const totalDiff = targetDate - startDate;
-        const currentDiff = now - startDate;
         
-        // D-Day 계산
-        const dDayDiff = targetDate - now;
+        const schedule = [
+            { name: "1학기", start: "2026-02-03", end: "2026-07-23", type: "school" },
+            { name: "여름방학", start: "2026-07-24", end: "2026-08-19", type: "vacation" },
+            { name: "2학기", start: "2026-08-20", end: "2026-12-24", type: "school" },
+            { name: "겨울방학", start: "2026-12-25", end: "2027-01-26", type: "vacation" },
+            { name: "종업식", start: "2027-01-27", end: "2027-02-03", type: "school" }
+        ];
+
+        let currentPeriod = null;
+        for (let period of schedule) {
+            const start = new Date(period.start + 'T00:00:00');
+            const end = new Date(period.end + 'T23:59:59');
+            if (now >= start && now <= end) {
+                currentPeriod = period;
+                break;
+            }
+        }
+
+        if (!currentPeriod) {
+            document.getElementById('status-label').innerText = "학기 시작 전입니다.";
+            document.getElementById('progress-bar').style.width = "100%";
+            return;
+        }
+
+        const startDate = new Date(currentPeriod.start + 'T00:00:00');
+        const endDate = new Date(currentPeriod.end + 'T23:59:59');
+
+        const totalDiff = endDate - startDate;
+        const currentDiff = now - startDate;
+        const dDayDiff = endDate - now;
+        
         const dDay = Math.ceil(dDayDiff / (1000 * 60 * 60 * 24));
-
-        // D-day 2 계산
-        const dDaydiff2 = now - startDate + 1;
-        const dDay2 = Math.ceil(dDaydiff2 / (1000 * 60 * 60 * 24));
-
-        // 진행률 계산 (0~100 사이로 제한)
+        const elapsedDays = Math.floor(currentDiff / (1000 * 60 * 60 * 24)) + 1;
         let percent = (currentDiff / totalDiff) * 100;
-        if (percent < 0) percent = 0;
-        if (percent > 100) percent = 100;
+        percent = Math.max(0, Math.min(100, percent));
 
-        // 화면 업데이트
-        document.getElementById('d-day-text').innerText = dDay > 0 ? `D-${dDay}` : (dDay === 0 ? "D-Day!" : "종료됨");
+        const labelText = currentPeriod.type === "vacation" ? "개학까지" : currentPeriod.name + "까지";
+        const elapsedText = currentPeriod.type === "vacation" ? "방학" : "벌써";
+        
+        document.getElementById('status-label').innerHTML = `${currentPeriod.name} ${currentPeriod.type === 'vacation' ? '' : '종료'}까지 <span id="d-day-text">D-${dDay}</span> ${elapsedText} <span id="d-day-text2">${elapsedDays}</span>일째`;
         document.getElementById('percent-text').innerText = `${percent.toFixed(1)}%`;
-        document.getElementById('progress-bar').style.width = `${percent}%`;
-        document.getElementById('d-day-text2').innerText = dDay2 > 0 ? `${dDay2}` : (dDay2 === 0 ? "D-Day!" : "시작전");
-
+        
+        const progressBar = document.getElementById('progress-bar');
+        progressBar.style.width = `${percent}%`;
+        
+        if (currentPeriod.type === "vacation") {
+            progressBar.classList.add('vacation-bar');
+        } else {
+            progressBar.classList.remove('vacation-bar');
+        }
     }
 
     updateProgress();
-    // 매시간 업데이트
     setInterval(updateProgress, 3600000);
 </script>
 
