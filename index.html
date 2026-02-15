@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root {
+            --bg-color: #f1f1ef; /* 노션 기본 배경색과 유사 */
+            --bar-color: #2383e2; /* 진행바 색상 (파란색) */
+            --text-color: #37352f;
+        }
+        body {
+            margin: 0;
+            padding: 10px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+            background-color: transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+        }
+        .text-wrapper {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        .progress-container {
+            width: 100%;
+            height: 12px;
+            background-color: var(--bg-color);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: var(--bar-color);
+            width: 0%;
+            transition: width 1s ease-in-out;
+        }
+        #d-day-text {
+            color: #eb5757; /* D-Day 강조색 (빨간색 계열) */
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="text-wrapper">
+        <span>1학기 종료까지 <span id="d-day-text">D-?</span></span>
+        <span id="percent-text">0%</span>
+    </div>
+    <div class="progress-container">
+        <div class="progress-bar" id="progress-bar"></div>
+    </div>
+</div>
+
+<script>
+    function updateProgress() {
+        const now = new Date();
+        const targetDate = new Date('2026-08-29T00:00:00');
+        // 학기 시작일을 2026년 3월 2일로 가정하여 진행률 계산
+        const startDate = new Date('2026-03-02T00:00:00');
+
+        const totalDiff = targetDate - startDate;
+        const currentDiff = now - startDate;
+        
+        // D-Day 계산
+        const dDayDiff = targetDate - now;
+        const dDay = Math.ceil(dDayDiff / (1000 * 60 * 60 * 24));
+
+        // 진행률 계산 (0~100 사이로 제한)
+        let percent = (currentDiff / totalDiff) * 100;
+        if (percent < 0) percent = 0;
+        if (percent > 100) percent = 100;
+
+        // 화면 업데이트
+        document.getElementById('d-day-text').innerText = dDay > 0 ? `D-${dDay}` : (dDay === 0 ? "D-Day!" : "종료됨");
+        document.getElementById('percent-text').innerText = `${percent.toFixed(1)}%`;
+        document.getElementById('progress-bar').style.width = `${percent}%`;
+    }
+
+    updateProgress();
+    // 매시간 업데이트
+    setInterval(updateProgress, 3600000);
+</script>
+
+</body>
+</html>
