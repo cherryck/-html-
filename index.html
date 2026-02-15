@@ -45,13 +45,16 @@
         #d-day-text {
             color: #eb5757; /* D-Day 강조색 (빨간색 계열) */
         }
-    </style>
+
+        #d-day-text2 {
+            color: #eb5757; /* D-Day 강조색 (빨간색 계열) */
+        }    </style>
 </head>
 <body>
 
 <div class="container">
     <div class="text-wrapper">
-        <span>1학기 종료까지 <span id="d-day-text">D-?</span></span>
+        <span>1학기 종료까지 <span id="d-day-text">D-?</span> 벌써 <span id="d-day-text2"></span>일째</span>
         <span id="percent-text">0%</span>
     </div>
     <div class="progress-container">
@@ -64,7 +67,7 @@
         const now = new Date();
         const targetDate = new Date('2026-08-29T00:00:00');
         // 학기 시작일을 2026년 3월 2일로 가정하여 진행률 계산
-        const startDate = new Date('2026-02-01T00:00:00');
+        const startDate = new Date('2026-03-02T00:00:00');
 
         const totalDiff = targetDate - startDate;
         const currentDiff = now - startDate;
@@ -72,6 +75,10 @@
         // D-Day 계산
         const dDayDiff = targetDate - now;
         const dDay = Math.ceil(dDayDiff / (1000 * 60 * 60 * 24));
+
+        // D-day 2 계산
+        const dDaydiff2 = now - startDate + 1;
+        const dDay2 = Math.ceil(dDaydiff2 / (1000 * 60 * 60 * 24));
 
         // 진행률 계산 (0~100 사이로 제한)
         let percent = (currentDiff / totalDiff) * 100;
@@ -82,6 +89,8 @@
         document.getElementById('d-day-text').innerText = dDay > 0 ? `D-${dDay}` : (dDay === 0 ? "D-Day!" : "종료됨");
         document.getElementById('percent-text').innerText = `${percent.toFixed(1)}%`;
         document.getElementById('progress-bar').style.width = `${percent}%`;
+        document.getElementById('d-day-text2').innerText = dDay2 > 0 ? `${dDay2}` : (dDay2 === 0 ? "D-Day!" : "시작전");
+
     }
 
     updateProgress();
